@@ -1,0 +1,24 @@
+# ref: https://karoten512.hatenablog.com/entry/2018/01/10/012253
+FROM centos:centos7
+
+RUN yum -y install telnet-server
+
+# telnet接続用ユーザー用意
+RUN useradd -m telnet-user && \
+echo "telnet-user:teltel" | chpasswd
+
+RUN echo -e "\
+service telnet \
+{ \
+    flags       = REUSE \
+    socket_type = stream \
+    wait        = no \
+    user        = root \
+    server      = /usr/sbin/in.telnetd \
+    log_on_failure  += USERID \
+    disable     = no \
+}" >> /etc/xinetd.d/telnet
+
+EXPOSE 23
+
+CMD ["systemctl", "start", "telnet.socket"]
