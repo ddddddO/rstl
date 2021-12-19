@@ -21,16 +21,20 @@ fn main() {
 }
 
 fn build_remote(args: &Vec<String>) -> String {
-    if args.len() == 3 {
+    let remote = if args.len() == 3 {
         let host = &args[1];
         let port = &args[2];
-        return format!("{}:{}", host, port);
+
+        format!("{}:{}", host, port)
     } else if args.len() == 2 {
         let host = &args[1];
         let default_port = "23".to_string();
-        return format!("{}:{}", host, default_port);
+
+        format!("{}:{}", host, default_port)
     } else {
         // TODO: error handring
-        return "args error".to_string()
-    }
+        "args error".to_string()
+    };
+
+    remote
 }
