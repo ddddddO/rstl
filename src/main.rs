@@ -1,12 +1,20 @@
 use std::net::TcpStream;
 use std::env;
+use std::io::Read;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let remote: String = build_remote(&args);
 
-    if let Ok(_stream) = TcpStream::connect(remote) {
+    if let Ok(mut stream) = TcpStream::connect(remote) {
         println!("Connected to the server!");
+
+        let mut buffer = [0; 12];
+        let _n = stream.read(&mut buffer[..]);
+        println!("received message (bytes): {:?}", &buffer[..12]);
+
+        let converted_string_buffer = std::str::from_utf8(&buffer).unwrap();
+        println!("received message (string): {}", converted_string_buffer.to_string());
     } else {
         println!("Couldn't connect to server...");
     }
