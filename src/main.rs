@@ -1,6 +1,8 @@
 use std::net::TcpStream;
 use std::env;
 use std::io::Read;
+use std::{thread, time};
+use std::io::{self, Write};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -8,14 +10,25 @@ fn main() {
 
     if let Ok(mut stream) = TcpStream::connect(remote) {
         println!("Connected to the server!");
+        let sleep_secs = time::Duration::from_millis(3000);
+        stream.set_nonblocking(true).expect("set_nonblocking call failed");
+        thread::sleep(sleep_secs);
 
-        const READ_LENGTH: usize = 12;
+        const READ_LENGTH: usize = 1000;
         let mut buffer = [0; READ_LENGTH];
-        let _n = stream.read(&mut buffer[..]);
+        //let _n = stream.read(&mut buffer[..]);
+        let _n = stream.peek(&mut buffer[..]);
         println!("received message (bytes): {:?}", &buffer[..READ_LENGTH]);
 
-        let converted_string_buffer = std::str::from_utf8(&buffer).expect("Found invalid UTF-8");
-        println!("received message (string): {:?}", converted_string_buffer);
+        // let converted_string_buffer = std::str::from_utf8(&buffer).expect("Found invalid UTF-8");
+
+        // let converted_string_buffer = String::from_utf8_lossy(&buffer);
+        // println!("received message (string): {:?}", converted_string_buffer);
+
+        // NOTE: わからない。ハマってる
+        let stdout = io::stdout();
+        let mut handle = stdout.lock();
+        handle.write_all(&buffer);
     } else {
         println!("Couldn't connect to server...");
     }
