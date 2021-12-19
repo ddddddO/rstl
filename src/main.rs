@@ -9,12 +9,13 @@ fn main() {
     if let Ok(mut stream) = TcpStream::connect(remote) {
         println!("Connected to the server!");
 
-        let mut buffer = [0; 12];
+        const READ_LENGTH: usize = 12;
+        let mut buffer = [0; READ_LENGTH];
         let _n = stream.read(&mut buffer[..]);
-        println!("received message (bytes): {:?}", &buffer[..12]);
+        println!("received message (bytes): {:?}", &buffer[..READ_LENGTH]);
 
-        let converted_string_buffer = std::str::from_utf8(&buffer).unwrap();
-        println!("received message (string): {}", converted_string_buffer.to_string());
+        let converted_string_buffer = std::str::from_utf8(&buffer).expect("Found invalid UTF-8");
+        println!("received message (string): {:?}", converted_string_buffer);
     } else {
         println!("Couldn't connect to server...");
     }
