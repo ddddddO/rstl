@@ -1,7 +1,6 @@
 use std::net::TcpStream;
 use std::env;
 use std::io::Read;
-use std::{thread, time};
 use std::io::{self, Write};
 
 fn main() {
@@ -10,25 +9,34 @@ fn main() {
 
     if let Ok(mut stream) = TcpStream::connect(remote) {
         println!("Connected to the server!");
-        let sleep_secs = time::Duration::from_millis(3000);
-        stream.set_nonblocking(true).expect("set_nonblocking call failed");
-        thread::sleep(sleep_secs);
 
-        const READ_LENGTH: usize = 1000;
+        const READ_LENGTH: usize = 12;
         let mut buffer = [0; READ_LENGTH];
-        //let _n = stream.read(&mut buffer[..]);
-        let _n = stream.peek(&mut buffer[..]);
-        println!("received message (bytes): {:?}", &buffer[..READ_LENGTH]);
 
-        // let converted_string_buffer = std::str::from_utf8(&buffer).expect("Found invalid UTF-8");
+        // refs:
+        // http://srgia.com/docs/rfc854j.html [TELNET 命令構造]
+        // https://stackoverflow.com/questions/10413963/telnet-iac-command-answering
+        // http://www.iana.org/assignments/telnet-options/telnet-options.xhtml
 
-        // let converted_string_buffer = String::from_utf8_lossy(&buffer);
-        // println!("received message (string): {:?}", converted_string_buffer);
+        // client <- remote
+        let _n = stream.read(&mut buffer[..]);
+        println!("received message (bytes): {:?}", &buffer[..READ_LENGTH]); // [255, 253, 24, 255, 253, 32, 255, 253, 35, 255, 253, 39]
 
-        // NOTE: わからない。ハマってる
-        let stdout = io::stdout();
-        let mut handle = stdout.lock();
-        handle.write_all(&buffer);
+        let send_bytes = [255, 252, 24, 255, 252, 32, 255, 252, 35, 255, 252, 39];
+        // client -> remote
+        let _n = stream.write(&send_bytes[..]);
+
+        // client <- remote
+        let _n = stream.read(&mut buffer[..]);
+        println!("received message2 (bytes): {:?}", &buffer[..READ_LENGTH]); // [255, 251, 3, 255, 253, 1, 255, 253, 31, 255, 251, 5]
+
+        let send_bytes_2 = [255, 254, 3, 255, 254, 1, 255, 254, 31, 255, 254, 5];
+        // client -> remote
+        let _n = stream.write(&send_bytes_2[..]);
+
+        // client <- remote
+        let _n = stream.read(&mut buffer[..]);
+        println!("received message3 (bytes): {:?}", &buffer[..READ_LENGTH]); // [255, 253, 33, 255, 253, 1, 255, 253, 31, 255, 251, 5]
     } else {
         println!("Couldn't connect to server...");
     }
